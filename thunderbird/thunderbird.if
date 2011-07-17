@@ -1,0 +1,84 @@
+interface(`thunderbird_manage_home',`
+        gen_require(`
+                type $1;
+		type thunderbird_home_t;
+        ')
+
+        manage_files_pattern($1, thunderbird_home_t, thunderbird_home_t)
+        manage_dirs_pattern($1, thunderbird_home_t, thunderbird_home_t)
+        manage_lnk_files_pattern($1, thunderbird_home_t, thunderbird_home_t)
+')
+
+
+interface(`thunderbird_manage_tmpfs',`
+        gen_require(`
+                type $1;
+		type thunderbird_tmpfs_t;
+        ')
+
+        manage_files_pattern($1, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+        manage_dirs_pattern($1, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+        manage_lnk_files_pattern($1, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+')
+
+interface(`thunderbird_read_home',`
+        gen_require(`
+                type $1;
+		type thunderbird_home_t;
+        ')
+
+        list_dirs_pattern($1, thunderbird_home_t, thunderbird_home_t)
+        read_files_pattern($1, thunderbird_home_t, thunderbird_home_t)
+        read_lnk_files_pattern($1, thunderbird_home_t, thunderbird_home_t)
+')
+
+interface(`thunderbird_dontaudit_access_home',`
+        gen_require(`
+                type thunderbird_home_t;
+                class dir search_dir_perms;
+                class file read_file_perms;
+        ')
+
+        dontaudit $1 thunderbird_home_t:file read_file_perms;
+        dontaudit $1 thunderbird_home_t:dir search_dir_perms;
+')
+
+interface(`thunderbird_use_dbus',`
+        gen_require(`
+                type $1_dbusd_t, $2;
+                class dbus send_msg;
+                class unix_stream_socket connectto;
+                class process sigchld;
+		class fifo_file read;
+        ')
+
+	allow thunderbird_t $1_dbusd_t:unix_stream_socket connectto;
+	allow thunderbird_t $1_dbusd_t:dbus send_msg;
+	allow thunderbird_t $2:unix_stream_socket connectto;
+	allow thunderbird_t $2:dbus send_msg;
+	allow $2 thunderbird_t:dbus send_msg;
+	allow $2 thunderbird_t:unix_stream_socket connectto;
+	dontaudit thunderbird_t $2:fifo_file read;
+')
+
+interface(`thunderbird_relabelto',`
+    gen_require(`
+        type thunderbird_home_t;
+        class dir relabelto;
+        class file relabelto;
+    ')
+
+    allow $1 thunderbird_home_t:file relabelto;
+    allow $1 thunderbird_home_t:dir relabelto;
+')
+
+interface(`thunderbird_signal',`
+        gen_require(`
+                type $1;
+                class process { signull sigchld signal sigkill };
+        ')
+
+        allow thunderbird_t $1:process { signull sigchld };
+        allow $1 thunderbird_t:process { signull signal sigkill };
+')
+

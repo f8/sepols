@@ -1,0 +1,5 @@
+/usr/lib/[^/]*thunderbird[^/]*/thunderbird-bin          --      gen_context(system_u:object_r:thunderbird_exec_t,s0)
+/usr/lib64/[^/]*thunderbird[^/]*/thunderbird-bin        --      gen_context(system_u:object_r:thunderbird_exec_t,s0)
+HOME_DIR/\.thunderbird(/.*)?                                    gen_context(user_u:object_r:thunderbird_home_t,s0)
+HOME_DIR/\.gnome2_private(/.*)?                                 gen_context(user_u:object_r:gnome_home_t,s0)
+HOME_DIR/\.gtk-bookmarks        --        gen_context(user_u:object_r:gnome_home_t,s0)

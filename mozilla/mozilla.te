@@ -1,0 +1,31 @@
+policy_module(my_mozilla,0.0.22)
+
+require {
+	type mozilla_exec_t;
+	type mozilla_t;
+	type staff_t;
+	type user_t;
+	type pulseaudio_t;
+	type thunderbird_tmpfs_t;
+	class file { read };
+}
+
+domain_entry_file(mozilla_t, mozilla_exec_t)
+my_mozilla_use(staff_t, staff_r)
+my_mozilla_use(user_t, user_r)
+
+###
+userdom_manage_user_tmp_dirs(mozilla_t)
+userdom_manage_user_tmp_files(mozilla_t)
+userdom_manage_user_tmp_sockets(mozilla_t)
+userdom_write_user_tmp_dirs(mozilla_t)
+
+files_delete_tmp_dir_entry(mozilla_t)
+files_manage_generic_tmp_dirs(mozilla_t)
+files_manage_generic_tmp_files(mozilla_t)
+
+fs_getattr_tmpfs(mozilla_t)
+
+###
+allow pulseaudio_t mozilla_tmpfs_t:file read;
+allow mozilla_t thunderbird_tmpfs_t:file read;

@@ -1,0 +1,26 @@
+interface(`evince_use_dbus',`
+        gen_require(`
+                type $1_dbusd_t, $2;
+                class dbus { acquire_svc send_msg };
+                class unix_stream_socket connectto;
+		class fifo_file read;
+        ')
+
+	allow evince_t $1_dbusd_t:unix_stream_socket connectto;
+	allow evince_t $2:unix_stream_socket connectto;
+	allow evince_t $1_dbusd_t:dbus send_msg;
+	allow evince_t $2:dbus send_msg;
+	allow $2 evince_t:dbus send_msg;
+	allow $2 evince_t:unix_stream_socket connectto;
+	allow evince_t $2:fifo_file read;
+')
+
+interface(`evince_signal',`
+        gen_require(`
+                type $1;
+                class process { signull sigchld signal sigkill };
+        ')
+
+        allow evince_t $1:process { signull sigchld };
+        allow $1 evince_t:process { signal sigkill };
+')

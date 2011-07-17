@@ -1,0 +1,57 @@
+interface(`xchat_manage_home',`
+        gen_require(`
+                type $1;
+		type xchat_home_t;
+        ')
+
+        manage_files_pattern($1, xchat_home_t, xchat_home_t)
+        manage_dirs_pattern($1, xchat_home_t, xchat_home_t)
+')
+
+interface(`xchat_read_home',`
+        gen_require(`
+                type $1;
+		type xchat_home_t;
+        ')
+
+        list_dirs_pattern($1, xchat_home_t, xchat_home_t)
+        read_files_pattern($1, xchat_home_t, xchat_home_t)
+        read_lnk_files_pattern($1, xchat_home_t, xchat_home_t)
+')
+
+interface(`xchat_relabelto',`
+     gen_require(`
+        type xchat_home_t;
+        class dir relabelto;
+        class file relabelto;
+    ')
+
+    allow $1 xchat_home_t:file relabelto;
+    allow $1 xchat_home_t:dir relabelto;
+    ')
+
+interface(`xchat_use_dbus',`
+    gen_require(`
+        type $1_dbusd_t;
+		type $2;
+		class unix_stream_socket connectto;
+		class dbus { acquire_svc send_msg };
+		class fifo_file read;
+    ')
+
+	allow xchat_t $1_dbusd_t:unix_stream_socket connectto;
+	allow xchat_t $1_dbusd_t:dbus { acquire_svc send_msg };
+	allow xchat_t $2:dbus send_msg;
+	allow $2 xchat_t:dbus send_msg;
+	dontaudit xchat_t $2:fifo_file read;
+')
+
+interface(`xchat_signal',`
+        gen_require(`
+                type $1;
+		class process { sigchld signal };
+	')
+
+	allow xchat_t $1:process sigchld;
+	allow $1 xchat_t:process signal;
+')

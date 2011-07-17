@@ -1,0 +1,2 @@
+/usr/bin/evince 		-- 	gen_context(system_u:object_r:evince_exec_t,s0)
+HOME_DIR/\.recently-used\.xbel 	-- 	gen_context(system_u:object_r:gnome_home_t,s0)

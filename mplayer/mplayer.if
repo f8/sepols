@@ -1,0 +1,14 @@
+interface(`my_mplayer_use',`
+        gen_require(`
+                type $1;
+		role $2;
+		type mplayer_t;
+		type mplayer_exec_t;
+		class process { sigchld signull signal sigkill };
+        ')
+
+	domain_auto_trans($1, mplayer_exec_t, mplayer_t)
+	role $2 types mplayer_t;
+	allow mplayer_t $1:process { sigchld signull };
+	allow $1 mplayer_t:process { signal sigkill };
+')

@@ -1,0 +1,24 @@
+policy_module(my_mplayer,0.1.2)
+
+require {
+	type mplayer_exec_t;
+	type mplayer_t;
+	type staff_t;
+	type user_t;
+}
+
+domain_entry_file(mplayer_t, mplayer_exec_t)
+my_mplayer_use(staff_t, staff_r)
+my_mplayer_use(user_t, user_r)
+
+# ------------
+
+require {
+	type pulseaudio_t;
+	type mplayer_tmpfs_t;
+	class file { read getattr open };
+}
+
+pulseaudio_rw_home_files(mplayer_t)
+allow pulseaudio_t mplayer_tmpfs_t:file { read getattr open };
+dev_write_video_dev(mplayer_t)

@@ -1,0 +1,24 @@
+interface(`my_mozilla_use',`
+        gen_require(`
+                type $1;
+		role $2;
+		type mozilla_t;
+		type mozilla_exec_t;
+		type mozilla_tmpfs_t;
+		class process { signull sigchld signal sigkill };
+	        class unix_stream_socket connectto;
+		class dbus send_msg;
+        ')
+
+	domain_auto_trans($1, mozilla_exec_t, mozilla_t)
+	role $2 types mozilla_t;
+	allow mozilla_t $1:process sigchld;
+	allow mozilla_t $1:unix_stream_socket connectto;
+	allow $1 mozilla_t:unix_stream_socket connectto;
+	# DBUS
+	allow mozilla_t $1:dbus send_msg;
+	allow $1 mozilla_t:dbus send_msg;
+	allow $1 mozilla_tmpfs_t:file { read unlink open };
+	allow $1 mozilla_t:process { signull signal sigkill };
+')
+

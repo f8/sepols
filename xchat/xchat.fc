@@ -1,0 +1,2 @@
+/usr/bin/xchat          --      gen_context(system_u:object_r:xchat_exec_t,s0)
+HOME_DIR/\.xchat2(/.*)?         gen_context(user_u:object_r:xchat_home_t,s0)

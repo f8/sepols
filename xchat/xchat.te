@@ -1,0 +1,93 @@
+policy_module(my_xchat, 0.0.11)
+
+type xchat_t;
+type xchat_exec_t;
+type xchat_home_t;
+type xchat_tmpfs_t;
+
+domain_type(xchat_t)
+domain_entry_file(xchat_t, xchat_exec_t)
+domain_auto_trans(domain, xchat_exec_t, xchat_t)
+
+role staff_r types xchat_t;
+role user_r types xchat_t;
+
+#============= manage tmpfs files ==============
+files_tmpfs_file(xchat_tmpfs_t)
+ubac_constrained(xchat_tmpfs_t)
+manage_files_pattern(xchat_t, xchat_tmpfs_t, xchat_tmpfs_t)
+manage_lnk_files_pattern(xchat_t, xchat_tmpfs_t, xchat_tmpfs_t)
+manage_fifo_files_pattern(xchat_t, xchat_tmpfs_t, xchat_tmpfs_t)
+manage_sock_files_pattern(xchat_t, xchat_tmpfs_t, xchat_tmpfs_t)
+fs_tmpfs_filetrans(xchat_t, xchat_tmpfs_t, { file lnk_file sock_file fifo_file })
+
+require {
+	type user_t;
+	type staff_t;
+	type config_home_t;
+	type locate_t;
+	type setroubleshootd_t;
+	class fifo_file { read write getattr };
+	class netlink_route_socket { write getattr read bind create nlmsg_read };
+	class process sigkill;
+	class shm { unix_read write unix_write read destroy create };
+}
+
+# self
+allow xchat_t self:fifo_file { read write getattr };
+allow xchat_t self:process sigkill;
+allow xchat_t self:shm { unix_read write unix_write read destroy create };
+
+# interprocess
+xchat_use_dbus(staff, staff_t)
+xchat_use_dbus(user, user_t)
+xchat_signal(staff_t)
+xchat_signal(user_t)
+
+# config
+fs_associate(xchat_home_t)
+xchat_manage_home(xchat_t)
+xchat_manage_home(staff_t)
+xchat_manage_home(user_t)
+xchat_manage_home(sysadm_t)
+xchat_relabelto(staff_t)
+xchat_relabelto(user_t)
+xchat_relabelto(sysadm_t)
+xchat_read_home(setroubleshootd_t)
+xchat_read_home(locate_t)
+
+
+files_exec_etc_files(xchat_t)
+corecmd_exec_bin(xchat_t)
+fs_list_inotifyfs(xchat_t)
+files_read_etc_symlinks(xchat_t)
+files_read_usr_files(xchat_t)
+files_read_usr_symlinks(xchat_t)
+files_search_home(xchat_t)
+kernel_read_system_state(xchat_t)
+miscfiles_read_fonts(xchat_t)
+miscfiles_read_localization(xchat_t)
+
+# networking
+allow xchat_t self:tcp_socket { write getattr setopt read create connect };
+allow xchat_t self:udp_socket { write ioctl connect read create getattr };
+allow xchat_t self:netlink_route_socket { write getattr read bind create nlmsg_read };
+nscd_read_pid(xchat_t)
+sysnet_read_config(xchat_t)
+corenet_tcp_connect_ircd_port(xchat_t)
+dev_read_urand(xchat_t)
+
+# userdom
+manage_files_pattern(xchat_t, config_home_t, config_home_t)
+gnome_manage_config(xchat_t)
+gnome_search_gconf(xchat_t)
+userdom_list_user_home_dirs(xchat_t)
+
+# xserver
+xserver_manage_home_fonts(xchat_t)
+xserver_read_xdm_pid(xchat_t)
+xserver_stream_connect(xchat_t)
+
+# dontaudits
+userdom_dontaudit_use_user_ptys(xchat_t)
+userdom_dontaudit_manage_user_home_content_dirs(xchat_t)

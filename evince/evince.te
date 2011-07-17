@@ -1,0 +1,117 @@
+policy_module(my_evince,0.0.19)
+
+type evince_t;
+type evince_exec_t;
+type evince_config_t;
+type evince_tmpfs_t;
+
+domain_type(evince_t)
+domain_entry_file(evince_t, evince_exec_t)
+domain_auto_trans(domain, evince_exec_t, evince_t)
+
+role staff_r types evince_t;
+role user_r types evince_t;
+
+files_tmpfs_file(evince_tmpfs_t)
+ubac_constrained(evince_tmpfs_t)
+manage_files_pattern(evince_t, evince_tmpfs_t, evince_tmpfs_t)
+manage_lnk_files_pattern(evince_t, evince_tmpfs_t, evince_tmpfs_t)
+manage_fifo_files_pattern(evince_t, evince_tmpfs_t, evince_tmpfs_t)
+manage_sock_files_pattern(evince_t, evince_tmpfs_t, evince_tmpfs_t)
+fs_tmpfs_filetrans(evince_t, evince_tmpfs_t, { file lnk_file sock_file fifo_file })
+
+require {
+    type staff_t;
+	type user_t;
+    type gnome_home_t;
+    type config_home_t;
+    type user_home_dir_t;
+    type ssh_home_t;
+	type thunderbird_home_t;
+	class dir { list_dir_perms read getattr };
+    class process sigchld;
+    class fifo_file { read write getattr };                                     class shm { unix_read write unix_write read destroy create };
+}
+
+# allow interprocess communication
+allow evince_t self:fifo_file { read write getattr };
+allow evince_t self:shm { unix_read write unix_write read destroy create };
+evince_use_dbus(staff, staff_t)
+evince_use_dbus(user, user_t)
+evince_signal(staff_t)
+evince_signal(user_t)
+
+# allow printing 
+cups_read_rw_config(evince_t)
+cups_stream_connect(evince_t)
+dev_read_rand(evince_t)
+dev_read_urand(evince_t)
+
+# allow execution of files
+files_exec_etc_files(evince_t)
+corecmd_exec_bin(evince_t)
+can_exec(evince_t, evince_exec_t)
+
+# files
+files_getattr_lost_found_dirs(evince_t)
+files_list_home(evince_t)
+files_list_mnt(evince_t)
+files_manage_generic_tmp_dirs(evince_t)
+files_manage_generic_tmp_files(evince_t)
+files_read_etc_symlinks(evince_t)
+files_read_usr_files(evince_t)
+files_search_home(evince_t)
+fs_list_inotifyfs(evince_t)
+kernel_read_system_state(evince_t)
+miscfiles_read_fonts(evince_t)
+miscfiles_read_localization(evince_t)
+nscd_read_pid(evince_t)
+
+# userdomain
+manage_files_pattern(evince_t, config_home_t, config_home_t)
+manage_files_pattern(evince_t, user_home_dir_t, user_home_dir_t)
+gnome_manage_config(evince_t)
+gnome_list_home_config(evince_t)
+gnome_read_gconf_home_files(evince_t)
+gnome_search_gconf(evince_t)
+userdom_read_user_home_content_files(evince_t)
+userdom_manage_user_tmp_dirs(evince_t)
+userdom_manage_user_tmp_sockets(evince_t)
+userdom_read_user_tmp_files(evince_t)
+
+# removable media
+dev_getattr_usbfs_dirs(evince_t)
+storage_getattr_fixed_disk_dev(evince_t)
+fs_manage_dos_dirs(evince_t)
+fs_read_dos_files(evince_t)
+fs_getattr_noxattr_fs(evince_t)
+fs_read_noxattr_fs_symlinks(evince_t)
+fs_read_noxattr_fs_files(evince_t)
+fs_getattr_xattr_fs(evince_t)
+fs_getattr_cifs(evince_t)
+fs_manage_cifs_dirs(evince_t)
+fs_manage_cifs_files(evince_t)
+fs_getattr_nfs(evince_t)
+fs_manage_nfs_dirs(evince_t)
+fs_manage_nfs_files(evince_t)
+
+# read every crap in userfolder
+gpg_list_user_secrets(evince_t)
+mozilla_read_user_home_files(evince_t)
+mplayer_read_user_home_files(evince_t)
+pulseaudio_read_home_files(evince_t)
+userdom_read_home_audio_files(evince_t)
+allow evince_t ssh_home_t:dir list_dir_perms;
+xserver_read_user_xauth(evince_t)
+xserver_append_xdm_home_files(evince_t)
+
+# xserver
+xserver_manage_home_fonts(evince_t)
+xserver_read_xdm_pid(evince_t)
+xserver_stream_connect(evince_t)
+xserver_use_user_fonts(evince_t)
+xserver_read_user_iceauth(evince_t)
+
+# dontaudits
+files_dontaudit_list_non_security(evince_t)
+userdom_dontaudit_use_user_ptys(evince_t)

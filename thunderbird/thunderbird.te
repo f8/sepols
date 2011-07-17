@@ -1,0 +1,151 @@
+policy_module(my_thunderbird,0.0.28)
+
+type thunderbird_t;
+type thunderbird_exec_t;
+type thunderbird_home_t;
+type thunderbird_tmpfs_t;
+
+domain_type(thunderbird_t)
+domain_entry_file(thunderbird_t, thunderbird_exec_t)
+domain_auto_trans(domain, thunderbird_exec_t, thunderbird_t)
+
+role staff_r types thunderbird_t;
+role user_r types thunderbird_t;
+
+#============= thunderbird_tmpfs_t ==============
+files_tmpfs_file(thunderbird_tmpfs_t)
+ubac_constrained(thunderbird_tmpfs_t)
+manage_files_pattern(thunderbird_t, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+manage_lnk_files_pattern(thunderbird_t, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+manage_fifo_files_pattern(thunderbird_t, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+manage_sock_files_pattern(thunderbird_t, thunderbird_tmpfs_t, thunderbird_tmpfs_t)
+fs_tmpfs_filetrans(thunderbird_t, thunderbird_tmpfs_t, { file lnk_file sock_file fifo_file })
+fs_getattr_tmpfs(thunderbird_t)
+
+require {
+        type staff_t;
+        type user_t;
+	type cache_home_t;
+	type config_home_t;
+	type locate_t;
+	type mozilla_tmpfs_t;
+	type setroubleshootd_t;
+	class file { read write getattr open lock };
+	class process { execmem setsched signal };
+	class fifo_file { read write getattr };
+	class netlink_route_socket { write getattr read bind create nlmsg_read };
+	class shm { unix_read write unix_write read destroy create };
+	class tcp_socket { write getattr setopt read getopt create connect };
+	class udp_socket { write getattr connect read create ioctl };
+}
+
+# generate a sebool that decides whether to allow execmem permissions for thunderbird
+gen_tunable(thunderbird_allow_execmem, false)
+
+tunable_policy(`thunderbird_allow_execmem',`
+        allow thunderbird_t self:process execmem;
+')
+
+allow thunderbird_t cache_home_t:file { read write getattr open lock };
+allow thunderbird_t self:fifo_file { read write getattr };
+allow thunderbird_t self:netlink_route_socket { write getattr read bind create nlmsg_read };
+allow thunderbird_t self:process { setsched signal };
+allow thunderbird_t self:shm { unix_read write unix_write read destroy create };
+allow thunderbird_t self:tcp_socket { write getattr setopt read getopt create connect };
+allow thunderbird_t self:udp_socket { write getattr connect read create ioctl };
+
+# config dir
+thunderbird_manage_home(thunderbird_t)
+thunderbird_manage_home(staff_t)
+thunderbird_manage_home(user_t)
+thunderbird_manage_home(sysadm_t)
+thunderbird_manage_tmpfs(staff_t)
+thunderbird_manage_tmpfs(user_t)
+thunderbird_manage_tmpfs(sysadm_t)
+thunderbird_relabelto(staff_t)
+thunderbird_relabelto(sysadm_t)
+thunderbird_relabelto(user_t)
+fs_associate(thunderbird_home_t)
+thunderbird_read_home(setroubleshootd_t)
+thunderbird_read_home(locate_t)
+
+
+# pulse
+pulseaudio_manage_home_files(thunderbird_t)
+pulseaudio_read_home_files(thunderbird_t)
+pulseaudio_rw_home_files(thunderbird_t)
+pulseaudio_signull(thunderbird_t)
+pulseaudio_stream_connect(thunderbird_t)
+allow pulseaudio_t thunderbird_tmpfs_t:file { read open getattr };
+
+# process communication
+allow thunderbird_t mozilla_tmpfs_t:file { read getattr unlink open };
+dbus_read_lib_files(thunderbird_t)
+dbus_send_system_bus(thunderbird_t)
+dbus_system_bus_client(thunderbird_t)
+networkmanager_dbus_chat(thunderbird_t)
+thunderbird_use_dbus(staff, staff_t)
+thunderbird_use_dbus(user, user_t)
+thunderbird_signal(staff_t)
+thunderbird_signal(user_t)
+
+# networking
+corenet_tcp_connect_http_port(thunderbird_t)
+corenet_tcp_connect_pop_port(thunderbird_t)
+corenet_tcp_connect_smtp_port(thunderbird_t)
+sysnet_read_config(thunderbird_t)
+nscd_read_pid(thunderbird_t)
+dev_read_urand(thunderbird_t)
+
+# printing
+corenet_tcp_connect_ipp_port(thunderbird_t)
+cups_read_rw_config(thunderbird_t)
+cups_stream_connect(thunderbird_t)
+dev_read_rand(thunderbird_t)
+
+# files
+# - exec
+can_exec(thunderbird_t, thunderbird_exec_t)
+files_exec_etc_files(thunderbird_t)
+corecmd_exec_bin(thunderbird_t)
+
+# - read
+files_list_tmp(thunderbird_t)
+files_read_etc_runtime_files(thunderbird_t)
+files_read_etc_symlinks(thunderbird_t)
+files_read_usr_files(thunderbird_t)
+files_read_usr_symlinks(thunderbird_t)
+files_search_home(thunderbird_t)
+files_delete_tmp_dir_entry(thunderbird_t)
+files_manage_generic_tmp_dirs(thunderbird_t)
+files_manage_generic_tmp_files(thunderbird_t)
+fs_list_inotifyfs(thunderbird_t)
+kernel_read_system_state(thunderbird_t)
+miscfiles_read_fonts(thunderbird_t)
+miscfiles_read_localization(thunderbird_t)
+sssd_dontaudit_search_lib(thunderbird_t)
+
+# userdomain 
+manage_files_pattern(thunderbird_t, config_home_t, config_home_t)
+gnome_manage_config(thunderbird_t)
+gnome_read_gconf_home_files(thunderbird_t)
+gnome_read_generic_cache_files(thunderbird_t)
+gnome_search_gconf(thunderbird_t)
+userdom_list_user_home_dirs(thunderbird_t)
+userdom_manage_user_tmp_dirs(thunderbird_t)
+userdom_manage_user_tmp_sockets(thunderbird_t)
+userdom_manage_user_tmp_files(thunderbird_t)
+userdom_read_user_tmpfs_files(thunderbird_t)
+
+# xserver
+xserver_manage_home_fonts(thunderbird_t)
+xserver_read_xdm_pid(thunderbird_t)
+xserver_stream_connect(thunderbird_t)
+xserver_use_user_fonts(thunderbird_t)
+xserver_read_user_iceauth(thunderbird_t)
+
+# dontaudits
+mozilla_dontaudit_manage_user_home_files(thunderbird_t)
+userdom_dontaudit_use_user_ptys(thunderbird_t)
+userdom_dontaudit_manage_user_home_content_dirs(thunderbird_t)
+

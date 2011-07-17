@@ -1,0 +1,3 @@
+HOME_DIR/\.gnome2_private(/.*)? 	gen_context(user_u:object_r:gnome_home_t,s0)
+HOME_DIR/Downloads(/.*)?         	gen_context(user_u:object_r:user_tmp_t,s0)
+HOME_DIR/\.gtk-bookmarks        --        gen_context(user_u:object_r:gnome_home_t,s0)
